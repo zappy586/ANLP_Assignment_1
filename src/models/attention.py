@@ -11,7 +11,7 @@ class MHA(nn.Module):
         self.q = nn.Linear(in_features=model_dim, out_features=model_dim)
         self.k = nn.Linear(in_features=model_dim, out_features=model_dim)
         self.v = nn.Linear(in_features=model_dim, out_features=model_dim)
-        self.ff = nn.Linear(in_features=model_dim, out_features=model_dim)
+        self.out_proj = nn.Linear(in_features=model_dim, out_features=model_dim)
 
     def forward(self, x):
         q = self.q(x)
@@ -27,7 +27,7 @@ class MHA(nn.Module):
         self_attention = attention_scores @ v_heads
 
         mha_output = self_attention.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[1], self.model_dim)
-        output = self.ff(mha_output)
+        output = self.out_proj(mha_output)
         return output
 
 class GQA(nn.Module):
@@ -42,7 +42,7 @@ class GQA(nn.Module):
         self.q = nn.Linear(in_features=model_dim, out_features=model_dim)
         self.k = nn.Linear(in_features=model_dim, out_features=num_kv_heads * self.head_dim)
         self.v = nn.Linear(in_features=model_dim, out_features=num_kv_heads * self.head_dim)
-        self.ff = nn.Linear(in_features=model_dim, out_features=model_dim)
+        self.out_proj = nn.Linear(in_features=model_dim, out_features=model_dim)
 
     def forward(self, x):
         q = self.q(x)
@@ -64,7 +64,7 @@ class GQA(nn.Module):
         self_attention = attention_scores @ v_heads
 
         mha_output = self_attention.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[1], self.model_dim)
-        output = self.ff(mha_output)
+        output = self.out_proj(mha_output)
         return output
 
 
