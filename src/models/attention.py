@@ -63,24 +63,58 @@ class GQA(nn.Module):
         attention_scores = torch.softmax((q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2), dim=-1)
         self_attention = attention_scores @ v_heads
 
-        mha_output = self_attention.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[1], self.model_dim)
-        output = self.out_proj(mha_output)
+        gqa_output = self_attention.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[1], self.model_dim)
+        output = self.out_proj(gqa_output)
         return output
 
 
+class CrossAttention(MHA):
+    def __init__(self, num_heads, model_dim):
+        super().__init__(num_heads, model_dim)
 
+    def forward(self, encoder_hidden_states, decoder_hidden_states):
+        q = self.q(decoder_hidden_states)
+        k = self.k(encoder_hidden_states)
+        v = self.v(encoder_hidden_states)
 
+        q_heads = q.reshape(decoder_hidden_states.shape[0], decoder_hidden_states.shape[1], self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+        k_heads = k.reshape(encoder_hidden_states.shape[0], encoder_hidden_states.shape[1], self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+        v_heads = v.reshape(encoder_hidden_states.shape[0], encoder_hidden_states.shape[1], self.num_heads, self.head_dim).permute(0, 2, 1, 3)
 
-# test_mha = MHA(10, 60)
+        attention_scores = torch.softmax((q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2), dim=-1)
+        print(attention_scores.shape, attention_scores)
+        self_attention = attention_scores @ v_heads
 
-# print(f"MHA output: {test_mha(torch.randn((1, 13, 60))).shape}")
+        cross_attn_output = self_attention.permute(0, 2, 1, 3).reshape(decoder_hidden_states.shape[0], decoder_hidden_states.shape[1], self.model_dim)
+        output = self.out_proj(cross_attn_output)
+        return output
 
-# test = torch.tensor([1, 2, 3, 4, 5])
-# print(torch.repeat_interleave(test, 2))
+class GQACrossAttention(GQA):
+    def __init__(self, num_query_heads, num_kv_heads, model_dim):
+        super().__init__(num_query_heads, num_kv_heads, model_dim)
 
-# test_gqa = GQA(10, 5, 60)
+    def forward(self, encoder_hidden_states, decoder_hidden_states):
+        q = self.q(decoder_hidden_states)
+        k = self.k(encoder_hidden_states)
+        v = self.v(encoder_hidden_states)
 
-# print(f"GQA output : {test_gqa(torch.randn((1, 13, 60))).shape}")
+        q_heads = q.reshape(decoder_hidden_states.shape[0], decoder_hidden_states.shape[1], self.num_query_heads, self.head_dim).permute(0, 2, 1, 3)        
+
+        
+        k_heads = k.reshape(encoder_hidden_states.shape[0], encoder_hidden_states.shape[1], self.num_kv_heads, self.head_dim).permute(0, 2, 1, 3)
+        v_heads = v.reshape(encoder_hidden_states.shape[0], encoder_hidden_states.shape[1], self.num_kv_heads, self.head_dim).permute(0, 2, 1, 3)
+
+        # inflating the kv heads by consecutively copying the tensors along the num_kv_heads dimension, 
+        # to match the query tensor shape, so that groups of queries get the same kv tensors
+        k_heads = torch.repeat_interleave(k_heads, self.num_queries_per_kv, dim=-3)
+        v_heads = torch.repeat_interleave(v_heads, self.num_queries_per_kv, dim=-3)
+
+        attention_scores = torch.softmax((q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2), dim=-1)
+        self_attention = attention_scores @ v_heads
+
+        gqa_cross_attn_output = self_attention.permute(0, 2, 1, 3).reshape(decoder_hidden_states.shape[0], decoder_hidden_states.shape[1], self.model_dim)
+        output = self.out_proj(gqa_cross_attn_output)
+        return output
 
         
 

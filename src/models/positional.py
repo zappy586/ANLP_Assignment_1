@@ -1,19 +1,19 @@
 import torch
 from torch import nn
 
-# class SinusoidalPositionalEmbeddings(nn.Module):
-#     def __init__(self, model_dim, N):
-#         super().__init__()
-#         self.d = model_dim
-#         self.N = N
-#         self.register_buffer('k', torch.arange(0, model_dim, step=2))
+class SinusoidalPositionalEmbeddings(nn.Module):
+    def __init__(self, model_dim, N=10000):
+        super().__init__()
+        self.d = model_dim
+        self.N = N
+        self.register_buffer('k', torch.arange(0, model_dim, step=2))
 
-#     def forward(self, x):
-#         t = torch.arange(x.shape[1], device=x.device).unsqueeze(1)
-#         sin = torch.sin(t/self.N ** (self.k/self.d))
-#         cos = torch.cos(t/self.N ** (self.k/self.d))
-#         total_angles = torch.cat([sin, cos], dim=-1).unsqueeze(0)
-#         return x + total_angles
+    def forward(self, x):
+        t = torch.arange(x.shape[1], device=x.device).unsqueeze(1)
+        sin = torch.sin(t/self.N ** (self.k/self.d))
+        cos = torch.cos(t/self.N ** (self.k/self.d))
+        total_angles = torch.cat([sin, cos], dim=-1).unsqueeze(0)
+        return x + total_angles
 
 class MHA_RoPE(nn.Module):
     def __init__(self, num_heads, model_dim):
@@ -79,16 +79,16 @@ class MHA_RoPE(nn.Module):
 # test = torch.randn([1, 14, 512])
 # print(test.reshape([1, 14, ]))
 
-q1, q2 = torch.rand((1, 12, 15, 128)).split(int(128/2), dim=-1) 
-t = 15
-i = torch.arange(int(128/2))
-m = torch.arange(t).unsqueeze(-1)
-base_freq = 10000 ** (-2 * i/128)
-phi = m * base_freq
+# q1, q2 = torch.rand((1, 12, 15, 128)).split(int(128/2), dim=-1) 
+# t = 15
+# i = torch.arange(int(128/2))
+# m = torch.arange(t).unsqueeze(-1)
+# base_freq = 10000 ** (-2 * i/128)
+# phi = m * base_freq
 
-q1_rot = q1 * torch.cos(phi) - q2 * torch.sin(phi)
-q2_rot = q1 * torch.sin(phi) + q2 * torch.cos(phi)
+# q1_rot = q1 * torch.cos(phi) - q2 * torch.sin(phi)
+# q2_rot = q1 * torch.sin(phi) + q2 * torch.cos(phi)
 
-q = torch.cat((q1_rot, q2_rot), dim=-1)
+# q = torch.cat((q1_rot, q2_rot), dim=-1)
 
-print(m.shape, base_freq.shape, phi.shape, q.shape)
+# print(m.shape, base_freq.shape, phi.shape, q.shape)
