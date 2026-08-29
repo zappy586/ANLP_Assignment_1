@@ -13,7 +13,7 @@ class MHA(nn.Module):
         self.v = nn.Linear(in_features=model_dim, out_features=model_dim)
         self.out_proj = nn.Linear(in_features=model_dim, out_features=model_dim)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         q = self.q(x)
         k = self.k(x)
         v = self.v(x)
@@ -22,8 +22,11 @@ class MHA(nn.Module):
         k_heads = k.reshape(x.shape[0], x.shape[1], self.num_heads, self.head_dim).permute(0, 2, 1, 3)
         v_heads = v.reshape(x.shape[0], x.shape[1], self.num_heads, self.head_dim).permute(0, 2, 1, 3)
 
-        attention_scores = torch.softmax((q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2), dim=-1)
-        print(attention_scores.shape, attention_scores)
+        attention_scores = (q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2)
+        if mask is not None:
+            attention_scores = attention_scores.masked_fill(mask == 0, float('-inf'))
+
+        attention_scores = torch.softmax(attention_scores, dim=-1)
         self_attention = attention_scores @ v_heads
 
         mha_output = self_attention.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[1], self.model_dim)
@@ -44,14 +47,13 @@ class GQA(nn.Module):
         self.v = nn.Linear(in_features=model_dim, out_features=num_kv_heads * self.head_dim)
         self.out_proj = nn.Linear(in_features=model_dim, out_features=model_dim)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         q = self.q(x)
         k = self.k(x)
         v = self.v(x)
 
         q_heads = q.reshape(x.shape[0], x.shape[1], self.num_query_heads, self.head_dim).permute(0, 2, 1, 3)        
 
-        
         k_heads = k.reshape(x.shape[0], x.shape[1], self.num_kv_heads, self.head_dim).permute(0, 2, 1, 3)
         v_heads = v.reshape(x.shape[0], x.shape[1], self.num_kv_heads, self.head_dim).permute(0, 2, 1, 3)
 
@@ -60,7 +62,11 @@ class GQA(nn.Module):
         k_heads = torch.repeat_interleave(k_heads, self.num_queries_per_kv, dim=-3)
         v_heads = torch.repeat_interleave(v_heads, self.num_queries_per_kv, dim=-3)
 
-        attention_scores = torch.softmax((q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2), dim=-1)
+        attention_scores = (q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2)
+        if mask is not None:
+            attention_scores = attention_scores.masked_fill(mask == 0, float('-inf'))
+
+        attention_scores = torch.softmax(attention_scores, dim=-1)
         self_attention = attention_scores @ v_heads
 
         gqa_output = self_attention.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[1], self.model_dim)
