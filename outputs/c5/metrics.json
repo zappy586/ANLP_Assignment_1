@@ -1,0 +1,12 @@
+{
+  "bit_accuracy": 0.9995846792134474,
+  "sequence_accuracy": 0.936,
+  "levenshtein": 0.12266666666666666,
+  "train_time_min": 19.2214608947436,
+  "peak_memory_gb": 9.238658048,
+  "num_params": 38247683,
+  "best_epoch": 19,
+  "best_val_acc": 0.9996183938479756,
+  "final_val_loss": 0.010792494479877254,
+  "final_val_acc": 0.9973883435157175
+}

@@ -1,0 +1,15 @@
+{
+  "bit_accuracy": 0.7002896309801298,
+  "sequence_accuracy": 0.0,
+  "levenshtein": 88.568,
+  "bleu": 0.34415707399731743,
+  "rouge1": 0.5272155892738051,
+  "rougeL": 0.5222769119430402,
+  "train_time_min": 17.82215186357498,
+  "peak_memory_gb": 8.463026688,
+  "num_params": 44792835,
+  "best_epoch": 20,
+  "best_val_acc": 0.9119337570929197,
+  "final_val_loss": 0.46929436425367993,
+  "final_val_acc": 0.9119337570929197
+}

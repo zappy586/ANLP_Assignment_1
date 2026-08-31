@@ -9,6 +9,13 @@ wheels/
 main.py
 *.toml
 *.venv
+*.lock
+wandb
+*.pdf
+./Dataset_A1/
+*.pt
+
 
 # Virtual environments
 .venv
+

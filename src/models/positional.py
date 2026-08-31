@@ -27,7 +27,7 @@ class MHA_RoPE(nn.Module):
         self.v = nn.Linear(in_features=model_dim, out_features=model_dim)
         self.out_proj = nn.Linear(in_features=model_dim, out_features=model_dim)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         q = self.q(x)
         k = self.k(x)
         v = self.v(x)
@@ -56,7 +56,10 @@ class MHA_RoPE(nn.Module):
         q_heads = torch.cat((q1_rot, q2_rot), dim=-1)
         k_heads = torch.cat((k1_rot, k2_rot), dim=-1)
 
-        attention_scores = torch.softmax((q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2), dim=-1)
+        attention_scores = (q_heads @ torch.transpose(k_heads, 3, 2)) / self.head_dim ** (1/2)
+        if mask is not None:
+            attention_scores = attention_scores.masked_fill(mask == 0, float('-inf'))
+        attention_scores = torch.softmax(attention_scores, dim=-1)
         self_attention = attention_scores @ v_heads
 
         mha_output = self_attention.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[1], self.model_dim)
