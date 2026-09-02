@@ -45,13 +45,8 @@ class BLTEncoder(nn.Module):
         self.byte_embeddings = ByteEmbeddings(vocab_size, model_dim)
         self.positional_embeddings = SinusoidalPositionalEmbeddings(model_dim)
 
-        # learned position-within-patch, so bit order survives pooling
-        self.intra_patch_pos = nn.Parameter(torch.randn(patch_size, model_dim) * 0.02)
-
-        # order-preserving patch initialisation
         self.patch_proj = nn.Linear(patch_size * model_dim, model_dim)
 
-        # byte-level self-attention: contextualises kv before each pooling step
         self.byte_attn = nn.ModuleList([MHA(num_heads, model_dim) for _ in range(num_layers)])
         self.byte_norm = nn.ModuleList([LayerNorm(model_dim) for _ in range(num_layers)])
 
@@ -73,9 +68,6 @@ class BLTEncoder(nn.Module):
 
         num_patches = n // self.patch_size
         kv = emb.view(b * num_patches, self.patch_size, self.model_dim)
-
-        # full-strength positional signal inside the patch
-        kv = kv + self.intra_patch_pos.unsqueeze(0)
 
         # initial patch vector preserves bit order (concat + project, not mean)
         q = self.patch_proj(kv.reshape(b * num_patches, -1)).unsqueeze(1)

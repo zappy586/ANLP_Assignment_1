@@ -29,7 +29,7 @@ NUM_HEADS = 8
 NUM_LAYERS = 6
 LOCAL_ENC_LAYERS = 2
 LOCAL_DEC_LAYERS = 2
-PATCH_SIZE = 8
+PATCH_SIZE = 1
 CKPT_EVERY = 5
 NUM_SAMPLES = 20
 
@@ -39,7 +39,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 def load_data():
     if CONFIG == "C5":
-        loaders = get_byte_dataloaders(CIPHER_PATH, PLAIN_PATH, SPLIT_PATH, SEQ_LEN, BATCH_SIZE, source_length=2064)
+        loaders = get_byte_dataloaders(CIPHER_PATH, PLAIN_PATH, SPLIT_PATH, SEQ_LEN, BATCH_SIZE, source_length=SEQ_LEN)
         return (*loaders, None)
 
     src_tok = CipherBPETokenizer(vocab_size=256)

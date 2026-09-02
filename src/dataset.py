@@ -120,6 +120,10 @@ def get_bpe_dataloaders(cipher_file_path, plaintext_file_path, split_path, sourc
     return make(train_idx, True), make(val_idx, False), make(test_idx, False), meta
 
 
+def bits_to_bytes(bit_string):
+    n = len(bit_string)  
+    return [int(bit_string[i:i+8], 2) for i in range(0, n, 8)]
+
 def get_byte_dataloaders(cipher_file_path, plaintext_file_path, split_path, sequence_length, batch_size, byte_vocab_size=256, source_length=None):
     cipher_lines, plain_lines = load_lines(cipher_file_path, plaintext_file_path)
     train_idx, val_idx, test_idx = load_splits(split_path)
@@ -127,7 +131,7 @@ def get_byte_dataloaders(cipher_file_path, plaintext_file_path, split_path, sequ
     specials = make_special_ids(byte_vocab_size)
 
     def make(idx_list, shuffle_data):
-        sources = [list(cipher_lines[i].encode("utf-8")) for i in idx_list]
+        sources = [bits_to_bytes(cipher_lines[i]) for i in idx_list]
         targets = [list(plain_lines[i].encode("utf-8")) for i in idx_list]
         return build_loader(sources, targets, sequence_length, batch_size, specials, specials, shuffle_data, source_length)
 

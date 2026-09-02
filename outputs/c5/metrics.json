@@ -1,12 +1,12 @@
 {
-  "bit_accuracy": 0.9995846792134474,
-  "sequence_accuracy": 0.936,
-  "levenshtein": 0.12266666666666666,
-  "train_time_min": 19.2214608947436,
-  "peak_memory_gb": 9.238658048,
-  "num_params": 38247683,
-  "best_epoch": 19,
-  "best_val_acc": 0.9996183938479756,
-  "final_val_loss": 0.010792494479877254,
-  "final_val_acc": 0.9973883435157175
+  "bit_accuracy": 0.9956922703555394,
+  "sequence_accuracy": 0.8133333333333334,
+  "levenshtein": 1.104,
+  "train_time_min": 13.831424554189047,
+  "peak_memory_gb": 6.98799616,
+  "num_params": 36408579,
+  "best_epoch": 20,
+  "best_val_acc": 0.9988226069113932,
+  "final_val_loss": 0.00469000669545494,
+  "final_val_acc": 0.9988226069113932
 }
